@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>광고 제거</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      width: 180px;
+      margin: 12px;
+    }
+    #toggle {
+      width: 100%;
+      padding: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      background-color: #007bff;
+      color: white;
+    }
+    #toggle.off {
+      background-color: #888;
+    }
+    #status {
+      margin-top: 10px;
+      text-align: center;
+      font-size: 13px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <button id="toggle">비활성화</button>
+  <div id="status">현재 상태: 활성화됨</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
