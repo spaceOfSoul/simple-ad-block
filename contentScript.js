@@ -1,6 +1,6 @@
 let observer = null;
 
-const SELECTOR = '[class*=adsbygoogle]';
+const SELECTOR = '[class*=adsbygoogle], [id*=google_ads_iframe]';
 
 function makeObserver() {
   return new MutationObserver(() => {
