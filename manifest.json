@@ -4,8 +4,12 @@
   "version": "1.0",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "declarativeNetRequest"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {

@@ -1,30 +1,51 @@
-const SELECTOR = '[class*=adsbygoogle], [id*=google_ads_iframe], [id*=_fs-ad-iframe-container]';
-const SELECTOR_RCNT = 'div[data-attrid="AIOverview"], div[jsname="N760b"], #rcnt > div.bzXtMb.M8OgIe.dRpWwb, #rso > div:nth-child(3)';
+const SELECTOR = '[class*=adsbygoogle], [id*=google_ads_iframe], [id*=_fs-ad-iframe-container], [id*=adVideoElement]';
 
-function makeBlocker(selector) {
+// data-async-type="folsrch" : AI 개요 동적 로딩 식별자
+// id^="folsrch"             : ID 기반 variant
+// data-subtree~="aimc"      : post-hydration 마커
+const SELECTOR_AI = '[data-async-type="folsrch"], [id^="folsrch"], [data-subtree~="aimc"]';
+
+function findAIOverview() {
+  const targets = new Set();
+  document.querySelectorAll(SELECTOR_AI).forEach(el => {
+    // #rcnt 또는 #rso의 직계 자식까지 올라가 해당 블록 전체를 숨김
+    let node = el;
+    while (node.parentElement) {
+      if (node.parentElement.id === 'rcnt' || node.parentElement.id === 'rso') {
+        targets.add(node);
+        return;
+      }
+      node = node.parentElement;
+    }
+    targets.add(el);
+  });
+  return targets;
+}
+
+function makeBlocker(finder) {
   let observer = null;
 
   function start() {
     if (observer) return;
     observer = new MutationObserver(() => {
-      document.querySelectorAll(selector).forEach(el => { el.style.display = 'none'; });
+      finder().forEach(el => { el.style.display = 'none'; });
     });
     observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
-    document.querySelectorAll(selector).forEach(el => { el.style.display = 'none'; });
+    finder().forEach(el => { el.style.display = 'none'; });
   }
 
   function stop() {
     if (!observer) return;
     observer.disconnect();
     observer = null;
-    document.querySelectorAll(selector).forEach(el => { el.style.removeProperty('display'); });
+    finder().forEach(el => { el.style.removeProperty('display'); });
   }
 
   return { start, stop, apply(enabled) { if (enabled) start(); else stop(); } };
 }
 
-const adBlocker = makeBlocker(SELECTOR);
-const rcntBlocker = makeBlocker(SELECTOR_RCNT);
+const adBlocker  = makeBlocker(() => document.querySelectorAll(SELECTOR));
+const rcntBlocker = makeBlocker(findAIOverview);
 
 chrome.storage.sync.get({ enabled: true, enabledRcnt: true }, ({ enabled, enabledRcnt }) => {
   adBlocker.apply(enabled);
@@ -44,5 +65,5 @@ chrome.storage.onChanged.addListener((changes, area) => {
 chrome.runtime.onMessage.addListener((msg) => {
   if (!msg) return;
   if (msg.type === 'TOGGLE_STATE') adBlocker.apply(!!msg.enabled);
-  if (msg.type === 'TOGGLE_RCNT') rcntBlocker.apply(!!msg.enabled);
+  if (msg.type === 'TOGGLE_RCNT')  rcntBlocker.apply(!!msg.enabled);
 });
